@@ -1,0 +1,192 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOCX公式提取转换器</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .instructions {
+            background-color: #e9f7fe;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .file-input-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-name {
+            margin-top: 10px;
+            font-style: italic;
+            color: #666;
+        }
+        footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        .features {
+            display: flex;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+        .feature {
+            flex-basis: 30%;
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+        .feature h3 {
+            color: #3498db;
+            margin-top: 0;
+        }
+        .feature-icon {
+            font-size: 24px;
+            color: #3498db;
+            margin-right: 10px;
+        }
+        .example-formula {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', Courier, monospace;
+            margin-top: 10px;
+            border-left: 3px solid #3498db;
+        }
+        @media (max-width: 768px) {
+            .feature {
+                flex-basis: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>DOCX公式提取转换器</h1>
+        
+        <div class="instructions">
+            <h3>使用说明：</h3>
+            <p>本工具可将Word文档(DOCX)中的数学公式图片提取并转换为LaTeX格式，生成包含这些公式的Markdown文件。</p>
+            <ol>
+                <li>上传包含数学公式图片的DOCX文档</li>
+                <li>系统会自动处理文档内容和识别公式</li>
+                <li>处理完成后，您可以在浏览器中预览Markdown内容并查看渲染后的公式</li>
+                <li>可以编辑Markdown内容，并下载最终文件</li>
+            </ol>
+        </div>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-danger">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form action="{{ url_for('upload_file') }}" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">选择DOCX文件：</label>
+                <div class="file-input-wrapper">
+                    <button class="btn">浏览文件</button>
+                    <input type="file" name="file" id="file" accept=".docx" onchange="updateFileName(this)">
+                </div>
+                <div class="file-name" id="file-name"></div>
+            </div>
+            <button type="submit" class="btn">上传并处理</button>
+        </form>
+        
+        <div class="features">
+            <div class="feature">
+                <h3><span class="feature-icon">✓</span>精确公式位置</h3>
+                <p>保持原始文档中的精确公式位置，确保转换后内容结构一致。</p>
+            </div>
+            <div class="feature">
+                <h3><span class="feature-icon">✓</span>LaTeX实时渲染</h3>
+                <p>在浏览器中实时显示LaTeX公式渲染效果，支持编辑和预览。</p>
+                <div class="example-formula">$$E=mc^2$$</div>
+            </div>
+            <div class="feature">
+                <h3><span class="feature-icon">✓</span>格式自动修正</h3>
+                <p>自动修正公式格式问题，解决空格和特殊字符引起的渲染错误。</p>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>基于Pix2Text技术 | 仅支持DOCX格式文件 | 文件大小限制：16MB</p>
+    </footer>
+    
+    <script>
+        function updateFileName(input) {
+            const fileName = input.files[0]?.name || '';
+            document.getElementById('file-name').textContent = fileName ? `已选择: ${fileName}` : '';
+        }
+    </script>
+</body>
+</html>
